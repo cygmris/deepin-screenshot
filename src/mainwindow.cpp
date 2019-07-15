@@ -1200,6 +1200,7 @@ void MainWindow::shotCurrentImg()
     this->hide();
     emit hideScreenshotUI();
 
+
     const qreal ratio = this->devicePixelRatioF();
     QRect target( m_recordX * ratio,
                   m_recordY * ratio,
@@ -1253,6 +1254,7 @@ bool MainWindow::saveAction(const QPixmap &pix)
 
 //    using namespace utils;
     QPixmap screenShotPix = pix;
+
     QDateTime currentDate;
     QString currentTime =  currentDate.currentDateTime().
             toString("yyyyMMddHHmmss");
@@ -1401,8 +1403,11 @@ bool MainWindow::saveAction(const QPixmap &pix)
 
     if (copyToClipboard) {
         Q_ASSERT(!screenShotPix.isNull());
+        auto data = new QMimeData();
+        data->setImageData(screenShotPix.toImage());
+        data->setData(QStringLiteral("x-kde-force-image-copy"), QByteArray());
         QClipboard* cb = qApp->clipboard();
-        cb->setPixmap(screenShotPix, QClipboard::Clipboard);
+        cb->setMimeData(data, QClipboard::Clipboard);
     }
 
     return true;
@@ -1419,29 +1424,29 @@ void MainWindow::sendNotify(SaveAction saveAction, QString saveFilePath, const b
 	exit(0);
     }
 
-    QDBusInterface remote_dde_notify_obj("com.deepin.dde.Notification", "/com/deepin/dde/Notification",
-                                         "com.deepin.dde.Notification");
+//    QDBusInterface remote_dde_notify_obj("com.deepin.dde.Notification", "/com/deepin/dde/Notification",
+//                                         "com.deepin.dde.Notification");
 
-    const bool remote_dde_notify_obj_exist = remote_dde_notify_obj.isValid();
+//    const bool remote_dde_notify_obj_exist = remote_dde_notify_obj.isValid();
 
     QStringList actions;
     QVariantMap hints;
 
-    if (remote_dde_notify_obj_exist) {
-        actions << "_open" << tr("View");
-
-        QString fileDir  = QUrl::fromLocalFile(QFileInfo(saveFilePath).absoluteDir().absolutePath()).toString();
-        QString filePath = QUrl::fromLocalFile(saveFilePath).toString();
-        QString command;
-        if (QFile("/usr/bin/dde-file-manager").exists()) {
-            command = QString("/usr/bin/dde-file-manager,%1?selectUrl=%2").arg(fileDir).arg(filePath);
-        }
-        else {
-            command = QString("xdg-open,%1").arg(filePath);
-        }
-
-        hints["x-deepin-action-_open"] = command;
-    }
+//    if (remote_dde_notify_obj_exist) {
+//        actions << "_open" << tr("View");
+//
+//        QString fileDir  = QUrl::fromLocalFile(QFileInfo(saveFilePath).absoluteDir().absolutePath()).toString();
+//        QString filePath = QUrl::fromLocalFile(saveFilePath).toString();
+//        QString command;
+//        if (QFile("/usr/bin/dde-file-manager").exists()) {
+//            command = QString("/usr/bin/dde-file-manager,%1?selectUrl=%2").arg(fileDir).arg(filePath);
+//        }
+//        else {
+//            command = QString("xdg-open,%1").arg(filePath);
+//        }
+//
+//        hints["x-deepin-action-_open"] = command;
+//    }
 
     qDebug() << "saveFilePath:" << saveFilePath;
 
@@ -1455,13 +1460,14 @@ void MainWindow::sendNotify(SaveAction saveAction, QString saveFilePath, const b
     if (saveAction == SaveAction::SaveToClipboard && !m_noNotify) {
         QVariantMap emptyMap;
         m_notifyDBInterface->Notify("Deepin Screenshot", 0,  "deepin-screenshot", "",
-                                    summary,  QStringList(), emptyMap, 0);
+                                    summary,  QStringList(), emptyMap, 1000);
     }  else if ( !m_noNotify &&  !(m_saveIndex == SaveAction::SaveToSpecificDir && m_saveFileName.isEmpty())) {
         m_notifyDBInterface->Notify("Deepin Screenshot", 0,  "deepin-screenshot", "",
-                                    summary, actions, hints, 0);
+                                    summary, actions, hints, 1000);
     }
 
-    QTimer::singleShot(2, [=]{
+    QTimer::singleShot(200, [=]{
+        qDebug() << "beforeexit:";
         exitApp();
     });
 
