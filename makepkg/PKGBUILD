@@ -1,0 +1,27 @@
+# Maintainer: Felix Yan <felixonmars@archlinux.org>
+# Contributor: Josip Ponjavic <josipponjavic at gmail dot com>
+# Contributor: Xu Fasheng <fasheng.xu[AT]gmail.com>
+
+pkgname=kdeepin-screenshot
+pkgver=4.2.2
+pkgrel=1
+pkgdesc="Easy-to-use screenshot tool for linuxdeepin desktop environment"
+arch=('x86_64')
+url="https://github.com/linuxdeepin/deepin-screenshot"
+license=('GPL3')
+depends=('deepin-qt5integration' 'dtkwm' 'deepin-turbo')
+makedepends=('cmake' 'qt5-tools')
+groups=('deepin-extra')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/cygmris/deepin-screenshot/archive/$pkgver.tar.gz")
+sha512sums=('e94ff5c57c62edf0e83fad1c7a1007ed5eeda44f3ea08c3c46c1c2cd3d473643d8d7f756c57c94eab392cf8b84712f1b25a85e19dadaff2599bd85ce2d904f15')
+
+build() {
+  cd deepin-screenshot-$pkgver
+  cmake . -DCMAKE_INSTALL_PREFIX=/usr
+  make
+}
+
+package() {
+  cd deepin-screenshot-$pkgver
+  make DESTDIR="$pkgdir" install
+}

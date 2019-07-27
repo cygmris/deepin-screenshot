@@ -27,3 +27,8 @@ include*/
 *.autosave
 .vscode
 *.user
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+.idea/
